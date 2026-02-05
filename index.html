@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>邀請卡 AR 歡迎影片</title>
+
+  <!-- A-Frame + MindAR -->
+  <script src="https://unpkg.com/aframe@1.5.0/dist/aframe.min.js"></script>
+  <script src="https://unpkg.com/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
+
+  <style>
+    html, body { margin:0; height:100%; background:#000; font-family: system-ui, -apple-system, "Segoe UI", Arial; }
+    .hint {
+      position: fixed; left: 12px; right: 12px; top: 12px;
+      padding: 10px 12px; border-radius: 12px;
+      background: rgba(0,0,0,.55); color: #fff; font-size: 14px;
+      z-index: 10; backdrop-filter: blur(6px);
+    }
+    .modal {
+      position: fixed; inset: 0; display:none; align-items:center; justify-content:center;
+      background: rgba(0,0,0,.75); z-index: 20; padding: 20px;
+    }
+    .modal.open { display:flex; }
+    .card {
+      width: min(720px, 100%); background: rgba(20,20,20,.92);
+      border-radius: 18px; overflow:hidden; box-shadow: 0 10px 40px rgba(0,0,0,.5);
+    }
+    .card header{
+      display:flex; align-items:center; justify-content:space-between;
+      padding: 12px 14px; color:#fff; font-weight: 600;
+      border-bottom: 1px solid rgba(255,255,255,.08);
+    }
+    .btn {
+      appearance:none; border:0; background: rgba(255,255,255,.12); color:#fff;
+      padding: 8px 10px; border-radius: 12px; cursor: pointer;
+    }
+    video { width:100%; height:auto; display:block; background:#000; }
+    .note { padding: 10px 14px 14px; color: rgba(255,255,255,.75); font-size: 13px; }
+  </style>
+</head>
+
+<body>
+  <div class="hint" id="hint">
+    1) 點一下畫面啟動相機　2) 對準邀請卡圖面　3) 辨識到會跳出歡迎影片
+  </div>
+
+  <!-- Modal video -->
+  <div class="modal" id="modal" role="dialog" aria-modal="true" aria-label="歡迎影片">
+    <div class="card">
+      <header>
+        <div>歡迎 ✨</div>
+        <button class="btn" id="closeBtn">關閉</button>
+      </header>
+      <video id="welcomeVideo" playsinline controls preload="metadata">
+        <source src="./welcome.mp4" type="video/mp4" />
+        <!-- 建議你也放 webm：<source src="./welcome.webm" type="video/webm" /> -->
+        你的瀏覽器不支援影片播放
+      </video>
+      <div class="note">
+        若 iPhone 沒自動播放是正常的：點一下播放即可（Safari 限制）。
+      </div>
+    </div>
+  </div>
+
+  <!-- AR Scene -->
+  <a-scene
+    mindar-image="imageTargetSrc: ./targets.mind; autoStart: true; uiScanning: yes; uiLoading: yes;"
+    vr-mode-ui="enabled: false"
+    device-orientation-permission-ui="enabled: false"
+    renderer="colorManagement: true, physicallyCorrectLights: true"
+  >
+    <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
+
+    <!-- targetIndex: 0 代表你的 targets.mind 第一張目標圖 -->
+    <a-entity mindar-image-target="targetIndex: 0" id="marker">
+      <!-- 你也可以在卡面上疊個提示圖或動畫 -->
+      <!-- <a-plane position="0 0 0" width="1" height="0.6" material="color: white; opacity: 0.0"></a-plane> -->
+    </a-entity>
+  </a-scene>
+
+  <script>
+    const marker = document.getElementById('marker');
+    const modal = document.getElementById('modal');
+    const closeBtn = document.getElementById('closeBtn');
+    const video = document.getElementById('welcomeVideo');
+
+    let opened = false;
+
+    function openModal() {
+      if (opened) return;
+      opened = true;
+      modal.classList.add('open');
+
+      // 嘗試自動播放（Android Chrome 通常 OK；iOS 常需要手動點播放）
+      video.currentTime = 0;
+      const p = video.play();
+      if (p && typeof p.catch === 'function') p.catch(() => {});
+    }
+
+    function closeModal() {
+      modal.classList.remove('open');
+      video.pause();
+      opened = false;
+    }
+
+    closeBtn.addEventListener('click', closeModal);
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) closeModal();
+    });
+
+    marker.addEventListener('targetFound', () => {
+      openModal();
+    });
+
+    marker.addEventListener('targetLost', () => {
+      // 你想要「離開卡面就關掉」就打開下面兩行
+      // closeModal();
+    });
+
+    // iOS 通常要一次 user gesture 才能播放帶聲音影片
+    // 這裡讓使用者第一次點畫面時，先解鎖一次播放權限（不一定每台都需要）
+    let unlocked = false;
+    window.addEventListener('touchend', () => {
+      if (unlocked) return;
+      unlocked = true;
+      video.muted = true;
+      video.play().then(() => {
+        video.pause();
+        video.currentTime = 0;
+        video.muted = false;
+      }).catch(() => {});
+    }, { once: true });
+  </script>
+</body>
+</html>
