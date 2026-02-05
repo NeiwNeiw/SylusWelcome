@@ -3,57 +3,107 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-  <title>SylusWelcome · AR</title>
+  <title>Sylus Welcome</title>
 
-  <!-- ✅ 改用較穩的 A-Frame 版本 -->
+  <!-- 穩定版本組合 -->
   <script src="https://unpkg.com/aframe@1.4.2/dist/aframe.min.js"></script>
   <script src="https://unpkg.com/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
 
   <style>
-    :root{color-scheme:dark}
-    html,body{margin:0;height:100%;background:#000;font-family:system-ui,-apple-system,"Segoe UI",Arial}
-    .panel{
-      position:fixed;left:12px;right:12px;top:12px;z-index:9999;
-      padding:10px 12px;border-radius:14px;background:rgba(0,0,0,.60);
-      border:1px solid rgba(255,255,255,.08);backdrop-filter:blur(8px);
-      color:#fff;font-size:13px;line-height:1.45;max-height:45vh;overflow:auto;
-      white-space:pre-wrap;word-break:break-word;
+    :root { color-scheme: dark; }
+    html, body {
+      margin: 0;
+      height: 100%;
+      background: #000;
+      font-family: system-ui, -apple-system, "Segoe UI", Arial;
     }
-    .btn{
-      position:fixed;left:12px;right:12px;bottom:12px;z-index:9999;
-      border:0;border-radius:16px;padding:14px 16px;font-size:16px;font-weight:800;
-      background:rgba(255,255,255,.92);color:#000;cursor:pointer;
+
+    .start {
+      position: fixed;
+      left: 12px;
+      right: 12px;
+      bottom: 12px;
+      z-index: 9999;
+      border: 0;
+      border-radius: 16px;
+      padding: 14px 16px;
+      font-size: 16px;
+      font-weight: 800;
+      background: rgba(255,255,255,.92);
+      color: #000;
+      cursor: pointer;
     }
-    .btn:active{transform:translateY(1px)}
-    .modal{
-      position:fixed;inset:0;display:none;align-items:center;justify-content:center;
-      background:rgba(0,0,0,.75);z-index:10000;padding:18px;
+
+    .start:active {
+      transform: translateY(1px);
     }
-    .modal.open{display:flex}
-    .card{
-      width:min(760px,100%);background:rgba(20,20,20,.92);
-      border-radius:18px;overflow:hidden;box-shadow:0 10px 40px rgba(0,0,0,.6);
+
+    /* 影片彈窗 */
+    .modal {
+      position: fixed;
+      inset: 0;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      background: rgba(0,0,0,.75);
+      z-index: 10000;
+      padding: 18px;
     }
-    .card header{
-      display:flex;align-items:center;justify-content:space-between;
-      padding:12px 14px;color:#fff;font-weight:800;
-      border-bottom:1px solid rgba(255,255,255,.08);
+
+    .modal.open {
+      display: flex;
     }
-    .xbtn{
-      appearance:none;border:0;border-radius:12px;background:rgba(255,255,255,.12);
-      color:#fff;padding:8px 10px;cursor:pointer;
+
+    .card {
+      width: min(760px, 100%);
+      background: rgba(20,20,20,.92);
+      border-radius: 18px;
+      overflow: hidden;
+      box-shadow: 0 10px 40px rgba(0,0,0,.6);
     }
-    video{width:100%;height:auto;display:block;background:#000}
-    .note{padding:10px 14px 14px;color:rgba(255,255,255,.75);font-size:13px;line-height:1.5}
+
+    .card header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 14px;
+      color: #fff;
+      font-weight: 800;
+      border-bottom: 1px solid rgba(255,255,255,.08);
+    }
+
+    .xbtn {
+      appearance: none;
+      border: 0;
+      border-radius: 12px;
+      background: rgba(255,255,255,.12);
+      color: #fff;
+      padding: 8px 10px;
+      cursor: pointer;
+    }
+
+    video {
+      width: 100%;
+      height: auto;
+      display: block;
+      background: #000;
+    }
+
+    .note {
+      padding: 10px 14px 14px;
+      color: rgba(255,255,255,.75);
+      font-size: 13px;
+      line-height: 1.5;
+    }
   </style>
 </head>
 
 <body>
-  <div class="panel" id="log">載入中…</div>
-  <button class="btn" id="startBtn">開始相機</button>
+  <!-- 開始相機按鈕 -->
+  <button class="start" id="startBtn">開始相機</button>
 
-  <!-- Video modal -->
-  <div class="modal" id="modal" role="dialog" aria-modal="true" aria-label="歡迎影片">
+  <!-- 歡迎影片 -->
+  <div class="modal" id="modal" role="dialog" aria-modal="true">
     <div class="card">
       <header>
         <div>歡迎 ✨</div>
@@ -61,13 +111,14 @@
       </header>
       <video id="welcomeVideo" playsinline controls preload="metadata">
         <source src="./welcome.mp4" type="video/mp4" />
-        你的瀏覽器不支援影片播放
       </video>
-      <div class="note">iPhone 若無法自動播放正常，按播放鍵即可。</div>
+      <div class="note">
+        iPhone 若無法自動播放為正常現象，點播放即可。
+      </div>
     </div>
   </div>
 
-  <!-- ✅ 加 embedded + 簡化 renderer，避免某些 Safari 初始化卡住 -->
+  <!-- AR 場景 -->
   <a-scene
     embedded
     loading-screen="enabled:false"
@@ -81,7 +132,6 @@
   </a-scene>
 
   <script>
-    const logEl = document.getElementById('log');
     const startBtn = document.getElementById('startBtn');
     const sceneEl = document.querySelector('a-scene');
     const marker = document.getElementById('marker');
@@ -89,109 +139,60 @@
     const modal = document.getElementById('modal');
     const closeBtn = document.getElementById('closeBtn');
     const video = document.getElementById('welcomeVideo');
+
     let opened = false;
 
-    function log(msg){
-      const t = new Date().toLocaleTimeString();
-      logEl.textContent = `[${t}] ${msg}\n` + logEl.textContent;
-    }
-
-    window.addEventListener('error', e => log(`❌ error: ${e.message}`));
-    window.addEventListener('unhandledrejection', e => {
-      const r = e.reason;
-      log(`❌ unhandledrejection: ${r?.name || ''} ${r?.message || String(r)}`);
-    });
-
-    // ✅ WebGL 自檢：如果這裡失敗，A-Frame 很可能永遠不會 loaded
-    function webglCheck(){
-      const c = document.createElement('canvas');
-      const gl = c.getContext('webgl') || c.getContext('experimental-webgl');
-      return !!gl;
-    }
-
-    function openModal(){
-      if(opened) return;
+    function openModal() {
+      if (opened) return;
       opened = true;
       modal.classList.add('open');
-      log('🎬 打開影片彈窗');
-      try{
+
+      try {
         video.currentTime = 0;
         const p = video.play();
-        if(p && p.catch) p.catch(()=>log('ℹ️ 影片無法自動播放（iOS 常見）'));
-      }catch(_){}
+        if (p && p.catch) p.catch(() => {});
+      } catch (_) {}
     }
-    function closeModal(){
+
+    function closeModal() {
       modal.classList.remove('open');
-      try{ video.pause(); }catch(_){}
+      try { video.pause(); } catch (_) {}
       opened = false;
-      log('🧩 關閉影片彈窗');
     }
+
     closeBtn.addEventListener('click', closeModal);
-    modal.addEventListener('click', e => { if(e.target===modal) closeModal(); });
-
-    marker.addEventListener('targetFound', ()=>{ log('✅ targetFound：辨識到邀請卡'); openModal(); });
-    marker.addEventListener('targetLost', ()=>{ log('🔎 targetLost：看不到邀請卡'); });
-
-    // ✅ 不再傻等 loaded：最多等 3 秒，等不到就直接告訴你卡在哪
-    async function waitSceneReady(timeoutMs = 3000){
-      if(sceneEl.hasLoaded) return true;
-
-      const p = new Promise(res => sceneEl.addEventListener('loaded', ()=>res(true), {once:true}));
-      const t = new Promise(res => setTimeout(()=>res(false), timeoutMs));
-      return await Promise.race([p, t]);
-    }
-
-    async function forceCameraPermissionOnce(){
-      log('📷 step1：getUserMedia 要求相機權限');
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: { ideal:'environment' } },
-        audio: false
-      });
-      log('✅ step1：getUserMedia 成功');
-      stream.getTracks().forEach(t=>t.stop());
-      log('🛑 step1：停止串流（交給 MindAR）');
-    }
-
-    startBtn.addEventListener('click', async ()=>{
-      log('👉 按下開始相機');
-      log(`🔧 env: secureContext=${window.isSecureContext}, protocol=${location.protocol}`);
-      log(`🔧 webgl: ${webglCheck() ? 'OK' : 'FAIL'}`);
-      log(`🔧 support: mediaDevices=${!!navigator.mediaDevices}, getUserMedia=${!!navigator.mediaDevices?.getUserMedia}`);
-
-      try{
-        if(!window.isSecureContext) throw new Error('非 HTTPS（需要安全環境）');
-        if(!navigator.mediaDevices?.getUserMedia) throw new Error('不支援 getUserMedia');
-
-        if(!webglCheck()){
-          throw new Error('WebGL 初始化失敗（A-Frame 可能無法啟動）。請到：設定→Safari→進階，確認 WebGL 沒被限制；或重開 Safari/重開機再試。');
-        }
-
-        await forceCameraPermissionOnce();
-
-        log('⏳ step2：等待 A-Frame scene loaded（最多 3 秒）');
-        const ok = await waitSceneReady(3000);
-        if(!ok){
-          throw new Error('A-Frame scene 沒有進入 loaded（iOS Safari 常見卡點）。已改用 aframe@1.4.2 仍失敗的話，通常是 WebGL/資源載入被擋。');
-        }
-        log('✅ step2：scene loaded');
-
-        log('🚀 step3：mindar-image-system.start()');
-        const mindarSystem = sceneEl.systems['mindar-image-system'];
-        if(!mindarSystem) throw new Error('mindar-image-system 不存在（MindAR script 沒載到或被擋）');
-
-        await mindarSystem.start();
-        log('✅ step3：MindAR 已啟動（開始掃描）');
-
-        startBtn.textContent = '相機已啟動 ✅ 對準邀請卡';
-        startBtn.disabled = true;
-        startBtn.style.opacity = '0.7';
-      }catch(e){
-        log(`❌ 啟動失敗：${e?.name ? e.name+': ' : ''}${e?.message || String(e)}`);
-      }
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) closeModal();
     });
 
-    log('✅ 頁面載入完成');
-    log(`ℹ️ userAgent: ${navigator.userAgent}`);
+    marker.addEventListener('targetFound', openModal);
+
+    async function forceCameraPermissionOnce() {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: { ideal: 'environment' } },
+        audio: false
+      });
+      stream.getTracks().forEach(t => t.stop());
+    }
+
+    async function waitSceneReady() {
+      if (sceneEl.hasLoaded) return;
+      await new Promise(res => sceneEl.addEventListener('loaded', res, { once: true }));
+    }
+
+    startBtn.addEventListener('click', async () => {
+      try {
+        await forceCameraPermissionOnce();
+        await waitSceneReady();
+
+        const mindarSystem = sceneEl.systems['mindar-image-system'];
+        await mindarSystem.start();
+
+        startBtn.remove();
+      } catch (e) {
+        alert("相機啟動失敗，請確認已允許相機權限並使用 Safari 或 Chrome 開啟。");
+      }
+    });
   </script>
 </body>
 </html>
