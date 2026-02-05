@@ -3,45 +3,48 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-  <title>Sylus Welcome · 掃描邀請卡播放歡迎影片</title>
+  <title>Sylus Welcome · AR</title>
 
-  <!-- A-Frame + MindAR (Image Target) -->
+  <!-- A-Frame + MindAR -->
   <script src="https://unpkg.com/aframe@1.5.0/dist/aframe.min.js"></script>
   <script src="https://unpkg.com/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
 
   <style>
     :root { color-scheme: dark; }
     html, body { margin:0; height:100%; background:#000; font-family: system-ui, -apple-system, "Segoe UI", Arial; }
-    .hint {
+    .top {
       position: fixed; left: 12px; right: 12px; top: 12px;
-      padding: 10px 12px; border-radius: 14px;
-      background: rgba(0,0,0,.55); color: #fff; font-size: 14px; line-height: 1.4;
-      z-index: 30; backdrop-filter: blur(8px);
+      z-index: 9999; display:flex; gap:10px; align-items:stretch;
     }
-    .start {
+    .panel {
+      flex: 1;
+      padding: 10px 12px; border-radius: 14px;
+      background: rgba(0,0,0,.60); color:#fff; font-size: 13px; line-height: 1.45;
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(255,255,255,.08);
+      max-height: 42vh; overflow:auto;
+      white-space: pre-wrap; word-break: break-word;
+    }
+    .btn {
       position: fixed; left: 12px; right: 12px; bottom: 12px;
-      z-index: 40; border: 0; border-radius: 16px;
+      z-index: 9999;
+      border: 0; border-radius: 16px;
       padding: 14px 16px; font-size: 16px; font-weight: 800;
       background: rgba(255,255,255,.92); color:#000;
       cursor: pointer;
     }
-    .start:active { transform: translateY(1px); }
-    .badge {
-      position: fixed; right: 12px; bottom: 64px; z-index: 35;
-      padding: 8px 10px; border-radius: 999px;
-      background: rgba(0,0,0,.55); color: rgba(255,255,255,.9);
-      font-size: 12px;
-      backdrop-filter: blur(8px);
-      display:none;
+    .btn:active { transform: translateY(1px); }
+    .pill {
+      display:inline-block; padding: 3px 8px; border-radius: 999px;
+      background: rgba(255,255,255,.12); margin-right: 6px;
     }
-    .badge.show { display:block; }
 
     /* Video modal */
     .modal {
       position: fixed; inset: 0;
       display:none; align-items:center; justify-content:center;
       background: rgba(0,0,0,.75);
-      z-index: 60;
+      z-index: 10000;
       padding: 18px;
     }
     .modal.open { display:flex; }
@@ -49,57 +52,50 @@
       width: min(760px, 100%);
       background: rgba(20,20,20,.92);
       border-radius: 18px;
-      overflow: hidden;
+      overflow:hidden;
       box-shadow: 0 10px 40px rgba(0,0,0,.6);
     }
     .card header{
       display:flex; align-items:center; justify-content:space-between;
       padding: 12px 14px;
-      color:#fff; font-weight: 700;
+      color:#fff; font-weight: 800;
       border-bottom: 1px solid rgba(255,255,255,.08);
     }
-    .btn {
+    .xbtn {
       appearance:none; border:0; border-radius: 12px;
       background: rgba(255,255,255,.12);
       color:#fff; padding: 8px 10px; cursor: pointer;
     }
     video { width:100%; height:auto; display:block; background:#000; }
     .note { padding: 10px 14px 14px; color: rgba(255,255,255,.75); font-size: 13px; line-height:1.5; }
-    a { color: inherit; }
   </style>
 </head>
 
 <body>
-  <div class="hint" id="hint">
-    1) 點「開始相機」→ 允許相機<br/>
-    2) 對準邀請卡圖面<br/>
-    3) 辨識到會跳出歡迎影片
+  <div class="top">
+    <div class="panel" id="log">載入中…</div>
   </div>
 
-  <div class="badge" id="badge">狀態：等待開始</div>
+  <button class="btn" id="startBtn">開始相機</button>
 
-  <button class="start" id="startBtn">開始相機</button>
-
-  <!-- Modal video -->
+  <!-- Video modal -->
   <div class="modal" id="modal" role="dialog" aria-modal="true" aria-label="歡迎影片">
     <div class="card">
       <header>
         <div>歡迎 ✨</div>
-        <button class="btn" id="closeBtn">關閉</button>
+        <button class="xbtn" id="closeBtn">關閉</button>
       </header>
       <video id="welcomeVideo" playsinline controls preload="metadata">
         <source src="./welcome.mp4" type="video/mp4" />
-        <!-- 建議你也放 webm：<source src="./welcome.webm" type="video/webm" /> -->
         你的瀏覽器不支援影片播放
       </video>
       <div class="note">
-        iPhone 若沒自動播放是正常的（Safari 限制）。<br/>
-        你可以直接按播放鍵即可。
+        iPhone 若無法自動播放是正常的（Safari 限制），直接按播放即可。
       </div>
     </div>
   </div>
 
-  <!-- AR Scene (autoStart: false，靠按鈕啟動最穩) -->
+  <!-- AR Scene -->
   <a-scene
     mindar-image="imageTargetSrc: ./targets.mind; autoStart: false; uiScanning: yes; uiLoading: yes;"
     vr-mode-ui="enabled: false"
@@ -107,14 +103,12 @@
     renderer="colorManagement: true, physicallyCorrectLights: true"
   >
     <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
-
-    <!-- targetIndex: 0 = targets.mind 的第一張目標圖 -->
     <a-entity mindar-image-target="targetIndex: 0" id="marker"></a-entity>
   </a-scene>
 
   <script>
+    const logEl = document.getElementById('log');
     const startBtn = document.getElementById('startBtn');
-    const badge = document.getElementById('badge');
     const sceneEl = document.querySelector('a-scene');
 
     const marker = document.getElementById('marker');
@@ -124,21 +118,35 @@
 
     let opened = false;
 
-    function setStatus(text) {
-      badge.textContent = `狀態：${text}`;
-      badge.classList.add('show');
+    function log(msg) {
+      const t = new Date().toLocaleTimeString();
+      logEl.textContent = `[${t}] ${msg}\n` + logEl.textContent;
+    }
+
+    // 把所有錯誤都印出來（你就不會覺得「沒反應」）
+    window.addEventListener('error', (e) => {
+      log(`❌ error: ${e.message}`);
+    });
+    window.addEventListener('unhandledrejection', (e) => {
+      const r = e.reason;
+      log(`❌ unhandledrejection: ${(r && (r.name || r.message)) ? `${r.name || ''} ${r.message || ''}` : String(r)}`);
+    });
+
+    function isInAppBrowser() {
+      const ua = navigator.userAgent || '';
+      return /Line|FBAV|FBAN|Instagram|Messenger|MicroMessenger/i.test(ua);
     }
 
     function openModal() {
       if (opened) return;
       opened = true;
       modal.classList.add('open');
+      log('🎬 影片彈窗開啟');
 
-      // 嘗試自動播放（Android 常可；iOS 常需手動）
       try {
         video.currentTime = 0;
         const p = video.play();
-        if (p && typeof p.catch === 'function') p.catch(() => {});
+        if (p && typeof p.catch === 'function') p.catch(() => log('ℹ️ 影片無法自動播放（iOS 常見，手動按播放即可）'));
       } catch (_) {}
     }
 
@@ -146,91 +154,94 @@
       modal.classList.remove('open');
       try { video.pause(); } catch (_) {}
       opened = false;
+      log('🧩 影片彈窗關閉');
     }
-
     closeBtn.addEventListener('click', closeModal);
     modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
 
     marker.addEventListener('targetFound', () => {
-      setStatus('已辨識到邀請卡 ✅');
+      log('✅ targetFound：已辨識到邀請卡');
       openModal();
     });
-
     marker.addEventListener('targetLost', () => {
-      setStatus('未偵測到邀請卡');
-      // 如果你想「離開就關閉」打開下一行：
-      // closeModal();
+      log('🔎 targetLost：看不到邀請卡了');
     });
 
-    // 強制偵測 in-app browser（常會擋相機）
-    function isInAppBrowser() {
-      const ua = navigator.userAgent || '';
-      return /Line|FBAV|FBAN|Instagram|Messenger|MicroMessenger/i.test(ua);
-    }
-
     async function forceCameraPermissionOnce() {
-      // 先用 getUserMedia 逼出權限提示（成功後立刻 stop）
+      log('📷 step1：呼叫 getUserMedia 要求相機權限');
       const stream = await navigator.mediaDevices.getUserMedia({
         video: { facingMode: { ideal: 'environment' } },
         audio: false
       });
+      log('✅ step1：getUserMedia 成功（已拿到相機串流）');
       stream.getTracks().forEach(t => t.stop());
+      log('🛑 step1：已停止串流（交給 MindAR 接手）');
+    }
+
+    async function ensureSceneLoaded() {
+      if (sceneEl.hasLoaded) return;
+      log('⏳ step2：等待 A-Frame scene loaded');
+      await new Promise(res => sceneEl.addEventListener('loaded', res, { once: true }));
+      log('✅ step2：scene loaded');
     }
 
     startBtn.addEventListener('click', async () => {
-      try {
-        if (isInAppBrowser()) {
-          alert('你現在像是在社群 App 的內建瀏覽器開啟，常會擋相機。\n請改用「在 Safari/Chrome 開啟」再試一次。');
-        }
+      log('👉 按下開始相機');
 
+      if (isInAppBrowser()) {
+        log('⚠️ 偵測到內建瀏覽器（LINE/IG/FB 等）可能會擋相機');
+      }
+
+      try {
+        // 環境資訊先印出來
+        log(`🔧 env: secureContext=${window.isSecureContext}, protocol=${location.protocol}`);
+        log(`🔧 support: mediaDevices=${!!navigator.mediaDevices}, getUserMedia=${!!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia)}`);
+
+        if (!window.isSecureContext) {
+          throw new Error('非安全環境（需要 HTTPS 或 localhost 才能用相機）');
+        }
         if (!navigator.mediaDevices?.getUserMedia) {
           throw new Error('此瀏覽器不支援 getUserMedia（無法使用相機）');
         }
 
-        setStatus('要求相機權限中…');
-
-        // 1) 先強制跳相機權限（最關鍵）
+        // 1) 先逼出相機權限
         await forceCameraPermissionOnce();
 
-        // 2) 等 A-Frame scene 載入
-        if (!sceneEl.hasLoaded) {
-          setStatus('載入 AR 引擎中…');
-          await new Promise(res => sceneEl.addEventListener('loaded', res, { once: true }));
-        }
+        // 2) 等 scene ready
+        await ensureSceneLoaded();
 
         // 3) 啟動 MindAR
+        log('🚀 step3：準備啟動 mindar-image-system.start()');
         const mindarSystem = sceneEl.systems['mindar-image-system'];
-        if (!mindarSystem) {
-          throw new Error('mindar-image-system 不存在：MindAR script 可能沒載到或被擋');
-        }
+        if (!mindarSystem) throw new Error('mindar-image-system 不存在：MindAR script 可能沒載入成功');
 
-        setStatus('啟動相機與掃描中…');
         await mindarSystem.start();
+        log('✅ step3：MindAR start 完成（應該已開相機並進入掃描）');
 
-        // 4) UI
-        startBtn.remove();
-        document.getElementById('hint').innerHTML =
-          '相機已啟動 ✅<br/>請對準邀請卡圖面（清晰、不要反光）';
+        startBtn.textContent = '相機已啟動 ✅ 對準邀請卡';
+        startBtn.disabled = true;
+        startBtn.style.opacity = '0.7';
+
       } catch (e) {
         const name = e?.name ? `${e.name}: ` : '';
         const msg = e?.message || String(e);
+        log(`❌ 啟動失敗：${name}${msg}`);
 
-        // 常見錯誤友善提示
-        let extra = '';
+        // 常見狀況補充
         if ((e?.name || '').includes('NotAllowed')) {
-          extra = '\n\n看起來是權限被拒絕或被內建瀏覽器擋住：\n- iPhone：設定 → Safari → 相機 → 允許\n- 或請改用 Safari/Chrome 開啟（不要用 LINE/IG 內建瀏覽器）';
-        } else if ((e?.name || '').includes('NotFound')) {
-          extra = '\n\n找不到相機：\n- 可能是裝置沒有相機\n- 或相機被其他 App 佔用';
+          log('➡️ 多半是權限拒絕或被內建瀏覽器擋：請用 Safari/Chrome 開啟並允許相機');
         }
-
-        alert('相機啟動失敗：\n' + name + msg + extra);
-        console.error(e);
-        setStatus('啟動失敗（看 alert 訊息）');
+        if ((e?.name || '').includes('NotFound')) {
+          log('➡️ 多半是找不到相機或相機被其他 App 佔用');
+        }
       }
     });
 
-    // 初始狀態
-    setStatus('等待開始');
+    log('✅ 頁面載入完成');
+    log(`ℹ️ userAgent: ${navigator.userAgent}`);
+    if (isInAppBrowser()) {
+      log('⚠️ 你現在看起來是在「內建瀏覽器」開啟，強烈建議用 Safari/Chrome 外開。');
+    }
   </script>
 </body>
 </html>
