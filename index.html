@@ -2,197 +2,95 @@
 <html lang="zh-Hant">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-  <title>Sylus Welcome</title>
-
-  <!-- 穩定版本組合 -->
-  <script src="https://unpkg.com/aframe@1.4.2/dist/aframe.min.js"></script>
-  <script src="https://unpkg.com/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
-
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>秦徹影片</title>
   <style>
-    :root { color-scheme: dark; }
-    html, body {
-      margin: 0;
-      height: 100%;
-      background: #000;
-      font-family: system-ui, -apple-system, "Segoe UI", Arial;
+    :root{
+      --bg1:#0f0f14;
+      --bg2:#1a1a24;
+      --card:rgba(255,255,255,0.08);
+      --line:rgba(255,255,255,0.12);
+      --shadow:0 20px 60px rgba(0,0,0,.45);
     }
 
-    .start {
-      position: fixed;
-      left: 12px;
-      right: 12px;
-      bottom: 12px;
-      z-index: 9999;
-      border: 0;
-      border-radius: 16px;
-      padding: 14px 16px;
-      font-size: 16px;
-      font-weight: 800;
-      background: rgba(255,255,255,.92);
-      color: #000;
-      cursor: pointer;
+    *{ box-sizing:border-box; }
+
+    html, body{
+      margin:0;
+      width:100%;
+      height:100%;
+      font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang TC","Microsoft JhengHei",sans-serif;
+      background:
+        radial-gradient(circle at top, rgba(120,120,180,.18), transparent 35%),
+        linear-gradient(180deg, var(--bg2), var(--bg1));
+      color:#fff;
     }
 
-    .start:active {
-      transform: translateY(1px);
+    body{
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:24px;
     }
 
-    /* 影片彈窗 */
-    .modal {
-      position: fixed;
-      inset: 0;
-      display: none;
-      align-items: center;
-      justify-content: center;
-      background: rgba(0,0,0,.75);
-      z-index: 10000;
-      padding: 18px;
+    .wrap{
+      width:min(100%, 1100px);
+      display:flex;
+      justify-content:center;
+      align-items:center;
     }
 
-    .modal.open {
-      display: flex;
+    .player-card{
+      width:min(100%, 920px);
+      background:var(--card);
+      border:1px solid var(--line);
+      border-radius:22px;
+      overflow:hidden;
+      box-shadow:var(--shadow);
+      backdrop-filter:blur(10px);
+      -webkit-backdrop-filter:blur(10px);
     }
 
-    .card {
-      width: min(760px, 100%);
-      background: rgba(20,20,20,.92);
-      border-radius: 18px;
-      overflow: hidden;
-      box-shadow: 0 10px 40px rgba(0,0,0,.6);
+    .player-box{
+      position:relative;
+      width:100%;
+      aspect-ratio:16 / 9;
+      background:#000;
     }
 
-    .card header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 12px 14px;
-      color: #fff;
-      font-weight: 800;
-      border-bottom: 1px solid rgba(255,255,255,.08);
+    .player-box iframe{
+      width:100%;
+      height:100%;
+      border:0;
+      display:block;
     }
 
-    .xbtn {
-      appearance: none;
-      border: 0;
-      border-radius: 12px;
-      background: rgba(255,255,255,.12);
-      color: #fff;
-      padding: 8px 10px;
-      cursor: pointer;
-    }
-
-    video {
-      width: 100%;
-      height: auto;
-      display: block;
-      background: #000;
-    }
-
-    .note {
-      padding: 10px 14px 14px;
-      color: rgba(255,255,255,.75);
-      font-size: 13px;
-      line-height: 1.5;
+    @media (max-width: 768px){
+      body{ padding:14px; }
+      .player-card{ border-radius:16px; }
     }
   </style>
 </head>
-
 <body>
-  <!-- 開始相機按鈕 -->
-  <button class="start" id="startBtn">開始相機</button>
-
-  <!-- 歡迎影片 -->
-  <div class="modal" id="modal" role="dialog" aria-modal="true">
-    <div class="card">
-      <header>
-        <div>歡迎 ✨</div>
-        <button class="xbtn" id="closeBtn">關閉</button>
-      </header>
-      <video id="welcomeVideo" playsinline controls preload="metadata">
-        <source src="./welcome.mp4" type="video/mp4" />
-      </video>
-      <div class="note">
-        iPhone 若無法自動播放為正常現象，點播放即可。
+  <main class="wrap">
+    <section class="player-card" aria-label="影片播放器">
+      <div class="player-box">
+        <!--
+          把下面 FILE_ID 換成你的 Google 雲端影片檔案 ID
+          例如：
+          https://drive.google.com/file/d/1AbCdEfGhIjKlMnOpQrStUvWxYz/view?usp=sharing
+          那 FILE_ID 就是：
+          1AbCdEfGhIjKlMnOpQrStUvWxYz
+        -->
+        <iframe
+          src="https://drive.google.com/file/d/1NpRL96Jp71oaIfOtYNNoQb0pQhnZtA_g/preview"
+          allow="autoplay; fullscreen"
+          allowfullscreen
+          referrerpolicy="strict-origin-when-cross-origin"
+          title="秦徹影片"
+        ></iframe>
       </div>
-    </div>
-  </div>
-
-  <!-- AR 場景 -->
-  <a-scene
-    embedded
-    loading-screen="enabled:false"
-    renderer="antialias: true; alpha: true"
-    vr-mode-ui="enabled:false"
-    device-orientation-permission-ui="enabled:false"
-    mindar-image="imageTargetSrc: ./targets.mind; autoStart: false; uiScanning: yes; uiLoading: yes;"
-  >
-    <a-camera position="0 0 0" look-controls="enabled:false"></a-camera>
-    <a-entity mindar-image-target="targetIndex: 0" id="marker"></a-entity>
-  </a-scene>
-
-  <script>
-    const startBtn = document.getElementById('startBtn');
-    const sceneEl = document.querySelector('a-scene');
-    const marker = document.getElementById('marker');
-
-    const modal = document.getElementById('modal');
-    const closeBtn = document.getElementById('closeBtn');
-    const video = document.getElementById('welcomeVideo');
-
-    let opened = false;
-
-    function openModal() {
-      if (opened) return;
-      opened = true;
-      modal.classList.add('open');
-
-      try {
-        video.currentTime = 0;
-        const p = video.play();
-        if (p && p.catch) p.catch(() => {});
-      } catch (_) {}
-    }
-
-    function closeModal() {
-      modal.classList.remove('open');
-      try { video.pause(); } catch (_) {}
-      opened = false;
-    }
-
-    closeBtn.addEventListener('click', closeModal);
-    modal.addEventListener('click', (e) => {
-      if (e.target === modal) closeModal();
-    });
-
-    marker.addEventListener('targetFound', openModal);
-
-    async function forceCameraPermissionOnce() {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: { ideal: 'environment' } },
-        audio: false
-      });
-      stream.getTracks().forEach(t => t.stop());
-    }
-
-    async function waitSceneReady() {
-      if (sceneEl.hasLoaded) return;
-      await new Promise(res => sceneEl.addEventListener('loaded', res, { once: true }));
-    }
-
-    startBtn.addEventListener('click', async () => {
-      try {
-        await forceCameraPermissionOnce();
-        await waitSceneReady();
-
-        const mindarSystem = sceneEl.systems['mindar-image-system'];
-        await mindarSystem.start();
-
-        startBtn.remove();
-      } catch (e) {
-        alert("相機啟動失敗，請確認已允許相機權限並使用 Safari 或 Chrome 開啟。");
-      }
-    });
-  </script>
+    </section>
+  </main>
 </body>
 </html>
